@@ -3,6 +3,7 @@ package info.nightscout.androidaps.plugins.pump.medtronic.data
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import dagger.android.HasAndroidInjector
+import info.nightscout.androidaps.plugins.pump.medtronic.MedtronicPumpPlugin
 import info.nightscout.androidaps.plugins.pump.medtronic.R
 import info.nightscout.androidaps.plugins.pump.medtronic.comm.history.pump.MedtronicPumpHistoryDecoder
 import info.nightscout.androidaps.plugins.pump.medtronic.comm.history.pump.PumpHistoryEntry
@@ -1206,7 +1207,11 @@ class MedtronicHistoryData @Inject constructor(
         }
         if (newProfile != null) {
             aapsLogger.debug(LTag.PUMP, "processLastBasalProfileChange. item found, setting new basalProfileLocally: $newProfile")
-            val basalProfile = newProfile.decodedData["Object"] as BasalProfile
+            var basalProfile = newProfile.decodedData["Object"] as BasalProfile
+
+            // pump profile -> aaps, need local time
+            basalProfile = MedtronicPumpPlugin.convertProfileTimes(aapsLogger, false, mdtPumpStatus.pumpType, basalProfile)
+
             mdtPumpStatus.basalsByHour = basalProfile.getProfilesByHour(pumpType)
         }
     }
