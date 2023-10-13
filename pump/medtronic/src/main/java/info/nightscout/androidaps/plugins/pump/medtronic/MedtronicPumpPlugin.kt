@@ -72,16 +72,6 @@ import info.nightscout.pump.common.defs.PumpDriverState
 import info.nightscout.pump.common.sync.PumpDbEntryTBR
 import info.nightscout.pump.common.sync.PumpSyncStorage
 import info.nightscout.pump.common.utils.ProfileUtil
-import info.nightscout.rx.AapsSchedulers
-import info.nightscout.rx.bus.RxBus
-import info.nightscout.rx.events.EventRefreshButtonState
-import info.nightscout.rx.events.EventRefreshOverview
-import info.nightscout.rx.events.EventSWRLStatus
-import info.nightscout.rx.logging.AAPSLogger
-import info.nightscout.rx.logging.LTag
-import info.nightscout.shared.interfaces.ResourceHelper
-import info.nightscout.shared.sharedPreferences.SP
-import info.nightscout.shared.utils.DateUtil
 import org.joda.time.Instant
 import org.joda.time.LocalDateTime
 import java.util.Calendar
