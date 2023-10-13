@@ -1,6 +1,9 @@
 package info.nightscout.androidaps.plugins.pump.medtronic.comm
 
 import android.os.SystemClock
+import app.aaps.core.interfaces.logging.LTag
+import app.aaps.core.interfaces.pump.defs.PumpType
+import app.aaps.core.utils.DateTimeUtil
 import info.nightscout.androidaps.plugins.pump.common.hw.rileylink.RileyLinkCommunicationManager
 import info.nightscout.androidaps.plugins.pump.common.hw.rileylink.RileyLinkConst
 import info.nightscout.androidaps.plugins.pump.common.hw.rileylink.ble.RileyLinkCommunicationException
@@ -32,11 +35,8 @@ import info.nightscout.androidaps.plugins.pump.medtronic.driver.MedtronicPumpSta
 import info.nightscout.androidaps.plugins.pump.medtronic.util.MedtronicUtil
 import info.nightscout.androidaps.plugins.pump.medtronic.util.MedtronicUtil.Companion.createByteArray
 import info.nightscout.androidaps.plugins.pump.medtronic.util.MedtronicUtil.Companion.getByteArrayFromUnsignedShort
-import info.nightscout.core.utils.DateTimeUtil
-import info.nightscout.interfaces.pump.defs.PumpType
-import info.nightscout.pump.core.defs.PumpDeviceState
-import info.nightscout.pump.core.utils.ByteUtil
-import info.nightscout.rx.logging.LTag
+import info.nightscout.pump.common.defs.PumpDeviceState
+import info.nightscout.pump.common.utils.ByteUtil
 import org.joda.time.LocalDateTime
 import java.util.Calendar
 import java.util.GregorianCalendar
@@ -79,7 +79,8 @@ class MedtronicCommunicationManager  // This empty constructor must be kept, oth
     fun onInit() {
         // we can't do this in the constructor, as sp only gets injected after the constructor has returned
         medtronicPumpStatus.previousConnection = sp.getLong(
-            RileyLinkConst.Prefs.LastGoodDeviceCommunicationTime, 0L)
+            RileyLinkConst.Prefs.LastGoodDeviceCommunicationTime, 0L
+        )
     }
 
     override fun createResponseMessage(payload: ByteArray): PumpMessage {
@@ -128,8 +129,10 @@ class MedtronicCommunicationManager  // This empty constructor must be kept, oth
 
         // check connection
         val pumpMsgContent = createPumpMessageContent(RLMessageType.ReadSimpleData) // simple
-        val rfSpyResponse = rfspy.transmitThenReceive(RadioPacket(injector, pumpMsgContent), 0.toByte(), 200.toByte(),
-            0.toByte(), 0.toByte(), 25000, 0.toByte())
+        val rfSpyResponse = rfspy.transmitThenReceive(
+            RadioPacket(injector, pumpMsgContent), 0.toByte(), 200.toByte(),
+            0.toByte(), 0.toByte(), 25000, 0.toByte()
+        )
         aapsLogger.info(LTag.PUMPCOMM, "wakeup: raw response is " + ByteUtil.shortHexString(rfSpyResponse.raw))
         if (rfSpyResponse.wasTimeout()) {
             aapsLogger.error(LTag.PUMPCOMM, "isDeviceReachable. Failed to find pump (timeout).")
@@ -141,8 +144,11 @@ class MedtronicCommunicationManager  // This empty constructor must be kept, oth
                     val pumpResponse = createResponseMessage(radioResponse.payload)
                     if (!pumpResponse.isValid) {
                         aapsLogger.warn(
-                            LTag.PUMPCOMM, String.format(Locale.ENGLISH, "Response is invalid ! [interrupted=%b, timeout=%b]", rfSpyResponse.wasInterrupted(),
-                                                         rfSpyResponse.wasTimeout()))
+                            LTag.PUMPCOMM, String.format(
+                                Locale.ENGLISH, "Response is invalid ! [interrupted=%b, timeout=%b]", rfSpyResponse.wasInterrupted(),
+                                rfSpyResponse.wasTimeout()
+                            )
+                        )
                     } else {
 
                         // radioResponse.rssi;
@@ -154,8 +160,11 @@ class MedtronicCommunicationManager  // This empty constructor must be kept, oth
                             medtronicUtil.isModelSet = true
                         }
                         aapsLogger.debug(
-                            LTag.PUMPCOMM, String.format(Locale.ENGLISH, "isDeviceReachable. PumpModel is %s - Valid: %b (rssi=%d)", medtronicUtil.medtronicPumpModel, valid,
-                                                         radioResponse.rssi))
+                            LTag.PUMPCOMM, String.format(
+                                Locale.ENGLISH, "isDeviceReachable. PumpModel is %s - Valid: %b (rssi=%d)", medtronicUtil.medtronicPumpModel, valid,
+                                radioResponse.rssi
+                            )
+                        )
                         if (valid) {
                             if (state === PumpDeviceState.PumpUnreachable)
                                 medtronicPumpStatus.pumpDeviceState = PumpDeviceState.WakingUp
@@ -170,12 +179,14 @@ class MedtronicCommunicationManager  // This empty constructor must be kept, oth
                 } else {
                     aapsLogger.warn(
                         LTag.PUMPCOMM, "isDeviceReachable. Failed to parse radio response: "
-                        + ByteUtil.shortHexString(rfSpyResponse.raw))
+                            + ByteUtil.shortHexString(rfSpyResponse.raw)
+                    )
                 }
             } catch (e: RileyLinkCommunicationException) {
                 aapsLogger.warn(
                     LTag.PUMPCOMM, "isDeviceReachable. Failed to decode radio response: "
-                    + ByteUtil.shortHexString(rfSpyResponse.raw))
+                        + ByteUtil.shortHexString(rfSpyResponse.raw)
+                )
             }
         } else {
             aapsLogger.warn(LTag.PUMPCOMM, "isDeviceReachable. Unknown response: " + ByteUtil.shortHexString(rfSpyResponse.raw))
@@ -231,8 +242,11 @@ class MedtronicCommunicationManager  // This empty constructor must be kept, oth
             if (rval.commandType !== MedtronicCommandType.CommandACK) {
                 aapsLogger.error(LTag.PUMPCOMM, "runCommandWithFrames: Pump did not ACK frame #$frameNr")
                 aapsLogger.error(
-                    LTag.PUMPCOMM, String.format(Locale.ENGLISH, "Run command with Frames FAILED (command=%s, response=%s)", commandType.name,
-                                                 rval.toString()))
+                    LTag.PUMPCOMM, String.format(
+                        Locale.ENGLISH, "Run command with Frames FAILED (command=%s, response=%s)", commandType.name,
+                        rval.toString()
+                    )
+                )
                 return PumpMessage(aapsLogger, "No ACK after frame #$frameNr")
             } else {
                 aapsLogger.debug(LTag.PUMPCOMM, "Run command with Frames: Got ACK response for frame #$frameNr")
@@ -251,8 +265,10 @@ class MedtronicCommunicationManager  // This empty constructor must be kept, oth
         for (pageNumber in 0..4) {
             val rawHistoryPage = RawHistoryPage(aapsLogger)
             // wakeUp(receiverDeviceAwakeForMinutes, false);
-            val getHistoryMsg = makePumpMessage(MedtronicCommandType.GetHistoryData,
-                GetHistoryPageCarelinkMessageBody(pageNumber))
+            val getHistoryMsg = makePumpMessage(
+                MedtronicCommandType.GetHistoryData,
+                GetHistoryPageCarelinkMessageBody(pageNumber)
+            )
             aapsLogger.info(LTag.PUMPCOMM, "getPumpHistory: Page $pageNumber")
             // aapsLogger.info(LTag.PUMPCOMM,"getPumpHistoryPage("+pageNumber+"): "+ByteUtil.shortHexString(getHistoryMsg.getTxData()));
             // Ask the pump to transfer history (we get first frame?)
@@ -294,8 +310,10 @@ class MedtronicCommunicationManager  // This empty constructor must be kept, oth
                     rawHistoryPage.appendData(currentResponse.frameData)
                     // RileyLinkMedtronicService.getInstance().announceProgress(((100 / 16) *
                     // currentResponse.getFrameNumber() + 1));
-                    medtronicUtil.setCurrentCommand(MedtronicCommandType.GetHistoryData, pageNumber,
-                        currentResponse.frameNumber)
+                    medtronicUtil.setCurrentCommand(
+                        MedtronicCommandType.GetHistoryData, pageNumber,
+                        currentResponse.frameNumber
+                    )
                     aapsLogger.info(LTag.PUMPCOMM, String.format(Locale.ENGLISH, "getPumpHistory: Got frame %d of Page %d", currentResponse.frameNumber, pageNumber))
                     // Do we need to ask for the next frame?
                     if (expectedFrameNum < 16) { // This number may not be correct for pumps other than 522/722
@@ -312,8 +330,11 @@ class MedtronicCommunicationManager  // This empty constructor must be kept, oth
                     failures++
                     if (failures == 6) {
                         aapsLogger.error(
-                            LTag.PUMPCOMM, String.format(Locale.ENGLISH, "getPumpHistory: 6 failures in attempting to download frame %d of page %d, giving up.",
-                                                         expectedFrameNum, pageNumber))
+                            LTag.PUMPCOMM, String.format(
+                                Locale.ENGLISH, "getPumpHistory: 6 failures in attempting to download frame %d of page %d, giving up.",
+                                expectedFrameNum, pageNumber
+                            )
+                        )
                         done = true // failure completion.
                         doneWithError = true
                     }
@@ -339,7 +360,8 @@ class MedtronicCommunicationManager  // This empty constructor must be kept, oth
             if (rawHistoryPage.length != 1024) {
                 aapsLogger.warn(
                     LTag.PUMPCOMM, "getPumpHistory: short page.  Expected length of 1024, found length of "
-                    + rawHistoryPage.length)
+                        + rawHistoryPage.length
+                )
                 doneWithError = true
             }
             if (!rawHistoryPage.isChecksumOK) {
@@ -452,8 +474,11 @@ class MedtronicCommunicationManager  // This empty constructor must be kept, oth
     private inline fun checkResponseRawContent(rawContent: ByteArray?, commandType: MedtronicCommandType, errorCase: () -> Unit) {
         if (rawContent?.isEmpty() != false && commandType != MedtronicCommandType.PumpModel) {
             aapsLogger.warn(
-                LTag.PUMPCOMM, String.format(Locale.ENGLISH, "Content is empty or too short, no data to convert (type=%s,isNull=%b,length=%s)",
-                                             commandType.name, rawContent == null, rawContent?.size ?: "-"))
+                LTag.PUMPCOMM, String.format(
+                    Locale.ENGLISH, "Content is empty or too short, no data to convert (type=%s,isNull=%b,length=%s)",
+                    commandType.name, rawContent == null, rawContent?.size ?: "-"
+                )
+            )
             errorCase.invoke()
         } else {
             aapsLogger.debug(LTag.PUMPCOMM, "Raw response before convert: " + ByteUtil.shortHexString(rawContent))
@@ -474,7 +499,8 @@ class MedtronicCommunicationManager  // This empty constructor must be kept, oth
             } else {
                 val responseData = String.format(
                     "%s: Cannot return data. Data is too short [expected=%s, received=%s].", method, ""
-                    + expectedLength, "" + contents.size)
+                        + expectedLength, "" + contents.size
+                )
                 aapsLogger.warn(LTag.PUMPCOMM, responseData)
                 responseData
             }
@@ -571,7 +597,8 @@ class MedtronicCommunicationManager  // This empty constructor must be kept, oth
     private fun checkIfWeHaveMoreData(commandType: MedtronicCommandType, response: PumpMessage, data: ByteArray): Boolean {
         if (commandType === MedtronicCommandType.GetBasalProfileSTD || //
             commandType === MedtronicCommandType.GetBasalProfileA || //
-            commandType === MedtronicCommandType.GetBasalProfileB) {
+            commandType === MedtronicCommandType.GetBasalProfileB
+        ) {
             val responseRaw = response.rawContentOfFrame
             val last = responseRaw.size - 1
             aapsLogger.debug(LTag.PUMPCOMM, "Length: " + data.size)
@@ -660,8 +687,11 @@ class MedtronicCommunicationManager  // This empty constructor must be kept, oth
             try {
                 if (doWakeUpBeforeCommand) wakeUp(false)
                 if (debugSetCommands) aapsLogger.debug(
-                    LTag.PUMPCOMM, String.format(Locale.ENGLISH, "%s: Body - %s", commandType.commandDescription,
-                                                 ByteUtil.getHex(body)))
+                    LTag.PUMPCOMM, String.format(
+                        Locale.ENGLISH, "%s: Body - %s", commandType.commandDescription,
+                        ByteUtil.getHex(body)
+                    )
+                )
                 val msg = makePumpMessage(commandType, CarelinkLongMessageBody(body))
                 val pumpMessage = runCommandWithArgs(msg)
                 if (debugSetCommands) aapsLogger.debug(LTag.PUMPCOMM, String.format(Locale.ENGLISH, "%s: %s", commandType.commandDescription, pumpMessage.responseContent))
@@ -692,14 +722,25 @@ class MedtronicCommunicationManager  // This empty constructor must be kept, oth
         for (retries in 0..MAX_COMMAND_TRIES) {
             var responseMessage: PumpMessage? = null
             try {
-                responseMessage = runCommandWithFrames(MedtronicCommandType.SetBasalProfileSTD,
-                    basalProfileFrames)
+                responseMessage = runCommandWithFrames(
+                    MedtronicCommandType.SetBasalProfileSTD,
+                    basalProfileFrames
+                )
                 if (responseMessage!!.commandType === MedtronicCommandType.CommandACK) return true
             } catch (e: RileyLinkCommunicationException) {
                 aapsLogger.warn(LTag.PUMPCOMM, String.format(Locale.ENGLISH, "Error getting response from RileyLink (error=%s, retry=%d)", e.message, retries + 1))
             }
-            if (responseMessage != null) aapsLogger.warn(LTag.PUMPCOMM, String.format(Locale.ENGLISH, "Set Basal Profile: Invalid response: commandType=%s,rawData=%s", responseMessage.commandType, ByteUtil.shortHexString(responseMessage.rawContent))) else aapsLogger.warn(
-                LTag.PUMPCOMM, "Set Basal Profile: Null response.")
+            if (responseMessage != null) aapsLogger.warn(
+                LTag.PUMPCOMM,
+                String.format(
+                    Locale.ENGLISH,
+                    "Set Basal Profile: Invalid response: commandType=%s,rawData=%s",
+                    responseMessage.commandType,
+                    ByteUtil.shortHexString(responseMessage.rawContent)
+                )
+            ) else aapsLogger.warn(
+                LTag.PUMPCOMM, "Set Basal Profile: Null response."
+            )
         }
         return false
     }
